@@ -4,20 +4,23 @@ using System.Collections;
 class ListOrders {
 	private static string _apiUser;
 	private static string _apiKey;
-	private static bool _wantXml = false;
+	private static string _status;
+	private static bool _wantXml = true;
+	private static bool _wantHumanReadable = false;
 	private static string sep = "------------------------------------------------------\n";
 
 	public static void Main ( string [] args ) {
 		MagentoService mageService = new MagentoService();
 		string mageSession = null;
-		if( args.Length < 2 ) {
-			Console.WriteLine("Usage; ListOrders apiUser apiKey");
+		if( args.Length < 3 ) {
+			Console.WriteLine("Usage; ListOrders apiUser apiKey status [processing|complete|pending]");
 			return;
 		}
 
 		try {
 			_apiUser = args[0];
 			_apiKey = args[1];
+			_status = args[2];
 			mageSession = mageService.login(_apiUser, _apiKey);
 		}
 		catch( Exception ex ) {
@@ -26,7 +29,7 @@ class ListOrders {
 		}
 
 		try {
-			salesOrderListEntity[] salesOrders = mageService.salesOrderList(mageSession, tanMageFilter("status", "eq", "processing") );
+			salesOrderListEntity[] salesOrders = mageService.salesOrderList(mageSession, tanMageFilter("status", "eq", _status) );
 
 			if( _wantXml ) {
 				System.Xml.Serialization.XmlSerializer xml = new System.Xml.Serialization.XmlSerializer(salesOrders.GetType());
@@ -35,14 +38,6 @@ class ListOrders {
 			}
 
 			foreach( salesOrderListEntity orderHeader in salesOrders ) {
-				Console.WriteLine(
-					"OrderID  " + orderHeader.increment_id  + "\n"
-					+ "OrderDate " + orderHeader.created_at + "\n"
-					+ "Status    " + orderHeader.status + "\n"
-					+ "SoldTo    " + orderHeader.billing_firstname + " " + orderHeader.billing_lastname + "\n"
-					+ "Total     " + orderHeader.grand_total
-				);
-
 
 				salesOrderEntity orderDetail = mageService.salesOrderInfo(mageSession, orderHeader.increment_id);
 
@@ -51,28 +46,37 @@ class ListOrders {
 					xmlDetail.Serialize(Console.Out,orderDetail);
 					Console.WriteLine();
 				}
+				if( _wantHumanReadable ) {
+					Console.WriteLine(
+						"OrderID  " + orderHeader.increment_id  + "\n"
+						+ "OrderDate " + orderHeader.created_at + "\n"
+						+ "Status    " + orderHeader.status + "\n"
+						+ "SoldTo    " + orderHeader.billing_firstname + " " + orderHeader.billing_lastname + "\n"
+						+ "Total     " + orderHeader.grand_total
+					);
 
-				salesOrderAddressEntity billToAddress = orderDetail.billing_address;
-				Console.WriteLine(
-					"BillTo\n" 
-					+ "\t" + orderHeader.billing_firstname + " " + orderHeader.billing_lastname + "\n"
-					+ "\t" + billToAddress.street + "\n"
-					+ "\t" + billToAddress.city + ", " + billToAddress.region + " " + billToAddress.postcode
-				);
+					salesOrderAddressEntity billToAddress = orderDetail.billing_address;
+					Console.WriteLine(
+						"BillTo\n" 
+						+ "\t" + orderHeader.billing_firstname + " " + orderHeader.billing_lastname + "\n"
+						+ "\t" + billToAddress.street + "\n"
+						+ "\t" + billToAddress.city + ", " + billToAddress.region + " " + billToAddress.postcode
+					);
 
-				salesOrderAddressEntity shipToAddress = orderDetail.shipping_address;
-				Console.WriteLine(
-					"ShipTo\n" 
-					+ "\t" + orderHeader.shipping_firstname + " " + orderHeader.shipping_lastname + "\n"
-					+ "\t" + shipToAddress.street + "\n"
-					+ "\t" + shipToAddress.city + ", " + shipToAddress.region + " " + shipToAddress.postcode
-				);
+					salesOrderAddressEntity shipToAddress = orderDetail.shipping_address;
+					Console.WriteLine(
+						"ShipTo\n" 
+						+ "\t" + orderHeader.shipping_firstname + " " + orderHeader.shipping_lastname + "\n"
+						+ "\t" + shipToAddress.street + "\n"
+						+ "\t" + shipToAddress.city + ", " + shipToAddress.region + " " + shipToAddress.postcode
+					);
 
-				foreach( salesOrderItemEntity li in orderDetail.items ) {
-					Console.WriteLine( li.sku + " " + li.name );
-					phpDeserializer(li.product_options);
+					foreach( salesOrderItemEntity li in orderDetail.items ) {
+						Console.WriteLine( li.sku + " " + li.name );
+						phpDeserializer(li.product_options);
+					}
+					Console.WriteLine(sep);
 				}
-				Console.WriteLine(sep);
 			}
 		}
 		catch( Exception ex ) {
