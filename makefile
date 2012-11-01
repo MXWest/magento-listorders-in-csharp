@@ -1,7 +1,7 @@
 #
 #
 #
-ListOrders.exe: ListOrders.cs
+ListOrders.exe: ListOrders.cs MagentoService.dll
 	mcs \
 	/r:System.Web.Services \
 	/r:MagentoService.dll  \
