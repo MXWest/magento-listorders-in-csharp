@@ -78,6 +78,7 @@ class ListOrders {
 					Console.WriteLine(sep);
 				}
 			}
+    		mageService.endSession(mageSession);
 		}
 		catch( Exception ex ) {
 			Console.WriteLine("I was hoping for better than this. Error: \"" + ex.Message + "\"\n" );
