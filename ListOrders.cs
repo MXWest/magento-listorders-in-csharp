@@ -5,9 +5,10 @@ class ListOrders {
 	private static string _apiUser;
 	private static string _apiKey;
 	private static string _status;
-	private static bool _wantXml = true;
-	private static bool _wantHumanReadable = false;
-	private static string sep = "------------------------------------------------------\n";
+	private static bool _wantXml = false;
+	private static bool _wantHumanReadable = true; private static string sep = "------------------------------------------------------\n";
+	private static directoryRegionEntity[] _stateCodes;
+
 
 	public static void Main ( string [] args ) {
 		MagentoService mageService = new MagentoService();
@@ -29,6 +30,8 @@ class ListOrders {
 		}
 
 		try {
+			_stateCodes = mageService.directoryRegionList(mageSession, "US");
+
 			salesOrderListEntity[] salesOrders = mageService.salesOrderList(mageSession, tanMageFilter("status", "eq", _status) );
 
 			if( _wantXml ) {
@@ -40,6 +43,8 @@ class ListOrders {
 			foreach( salesOrderListEntity orderHeader in salesOrders ) {
 
 				salesOrderEntity orderDetail = mageService.salesOrderInfo(mageSession, orderHeader.increment_id);
+
+    			mageService.salesOrderAddComment(mageSession, orderHeader.increment_id, orderHeader.status, "Examined by remote API", "false");
 
 				if( _wantXml ) {
 					System.Xml.Serialization.XmlSerializer xmlDetail = new System.Xml.Serialization.XmlSerializer(orderDetail.GetType());
@@ -60,7 +65,7 @@ class ListOrders {
 						"BillTo\n" 
 						+ "\t" + orderHeader.billing_firstname + " " + orderHeader.billing_lastname + "\n"
 						+ "\t" + billToAddress.street + "\n"
-						+ "\t" + billToAddress.city + ", " + billToAddress.region + " " + billToAddress.postcode
+						+ "\t" + billToAddress.city + ", " + getStateAbbreviation(billToAddress.region_id) + " " + billToAddress.postcode
 					);
 
 					salesOrderAddressEntity shipToAddress = orderDetail.shipping_address;
@@ -68,7 +73,7 @@ class ListOrders {
 						"ShipTo\n" 
 						+ "\t" + orderHeader.shipping_firstname + " " + orderHeader.shipping_lastname + "\n"
 						+ "\t" + shipToAddress.street + "\n"
-						+ "\t" + shipToAddress.city + ", " + shipToAddress.region + " " + shipToAddress.postcode
+						+ "\t" + shipToAddress.city + ", " + getStateAbbreviation(shipToAddress.region_id) + " " + shipToAddress.postcode
 					);
 
 					foreach( salesOrderItemEntity li in orderDetail.items ) {
@@ -118,5 +123,14 @@ class ListOrders {
 			myComplexFilter
 		};
 		return mageFilters;
+	}
+
+	private static string getStateAbbreviation(string region_id) {
+		foreach( directoryRegionEntity _stateCode in _stateCodes ) {
+			if( int.Parse(_stateCode.region_id) == int.Parse(region_id) ) {
+				return _stateCode.code;
+			}
+		}
+		return "";
 	}
 }
