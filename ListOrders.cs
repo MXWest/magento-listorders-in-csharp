@@ -5,12 +5,16 @@ class ListOrders {
 	private static string _apiUser;
 	private static string _apiKey;
 	private static string _status;
-	private static bool _wantXml = false;
-	private static bool _wantHumanReadable = true; private static string sep = "------------------------------------------------------\n";
+	private static bool _wantXml = true;
+	private static bool _wantHumanReadable = false; 
+	private static bool _beSecure = false;
+	private static string sep = "------------------------------------------------------\n";
 	private static directoryRegionEntity[] _stateCodes;
 
+	private static System.Net.Security.RemoteCertificateValidationCallback mIgnoreInvalidCertificates;
 
 	public static void Main ( string [] args ) {
+		mIgnoreInvalidCertificates = new System.Net.Security.RemoteCertificateValidationCallback( delegate { return true; }); 
 		MagentoService mageService = new MagentoService();
 		string mageSession = null;
 		if( args.Length < 3 ) {
@@ -22,6 +26,15 @@ class ListOrders {
 			_apiUser = args[0];
 			_apiKey = args[1];
 			_status = args[2];
+			Console.WriteLine( "Connecting to " + mageService.Url );
+			if( _beSecure ) {   //require secure communications
+				System.Net.ServicePointManager.ServerCertificateValidationCallback -= mIgnoreInvalidCertificates;
+				Console.WriteLine("Requiring Valid Certificates from Remote Sites");
+			}
+			else {   /// Allow connections to SSL sites that have unsafe certificates.
+				System.Net.ServicePointManager.ServerCertificateValidationCallback += mIgnoreInvalidCertificates;
+				Console.WriteLine("Ignoring Invalid Certificates from Remote Sites");
+			}
 			mageSession = mageService.login(_apiUser, _apiKey);
 		}
 		catch( Exception ex ) {
