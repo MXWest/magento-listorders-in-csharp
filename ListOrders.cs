@@ -45,7 +45,7 @@ class ListOrders {
 		try {
 			_stateCodes = mageService.directoryRegionList(mageSession, "US");
 
-			salesOrderListEntity[] salesOrders = mageService.salesOrderList(mageSession, tanMageFilter("status", "eq", _status) );
+			salesOrderListEntity[] salesOrders = mageService.salesOrderList(mageSession, tanMageFilter("status", "eq", _status, "10") );
 
 			if( _wantXml ) {
 				System.Xml.Serialization.XmlSerializer xml = new System.Xml.Serialization.XmlSerializer(salesOrders.GetType());
@@ -123,7 +123,8 @@ class ListOrders {
 		return;
 	}
 
-	private static filters tanMageFilter(string mageField, string mageOperator, string mageValue ) {
+	private static filters tanMageFilter( string mageField, string mageOperator, string mageValue, string limit )
+	{
 		complexFilter myComplexFilter = new complexFilter();
 		myComplexFilter.key = mageField;
 		myComplexFilter.value = new associativeEntity {
@@ -131,9 +132,17 @@ class ListOrders {
 			value = mageValue 
 		};
 
+		complexFilter myLimitFilter = new complexFilter();
+		myLimitFilter.key = "collection.limit";
+		myLimitFilter.value = new associativeEntity {
+			key = "eq", 
+			value = limit 
+		};
+
 		filters mageFilters = new filters();
 		mageFilters.complex_filter = new complexFilter[] {
-			myComplexFilter
+			myComplexFilter,
+			myLimitFilter
 		};
 		return mageFilters;
 	}
