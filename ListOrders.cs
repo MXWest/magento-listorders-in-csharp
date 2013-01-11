@@ -57,7 +57,7 @@ class ListOrders {
 
 				salesOrderEntity orderDetail = mageService.salesOrderInfo(mageSession, orderHeader.increment_id);
 
-    			mageService.salesOrderAddComment(mageSession, orderHeader.increment_id, orderHeader.status, "Examined by remote API", "false");
+    			mageService.salesOrderAddComment(mageSession, orderHeader.increment_id, orderHeader.status, "Examined by remote API II", "0");
 
 				if( _wantXml ) {
 					System.Xml.Serialization.XmlSerializer xmlDetail = new System.Xml.Serialization.XmlSerializer(orderDetail.GetType());
