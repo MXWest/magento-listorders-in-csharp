@@ -43,8 +43,7 @@ mcs /r:System.Web.Services /r:MagentoService.dll /r:PHPSerializationLibrary.dll 
 
 ## Running the Program
 ### Know Your Magento API User Credentials
-These are the Web Services User / API Key you created in Magento. If you don't know what this means, you'll have to get these from your Magento admin, or learn yourself. Ecommerce Developer has a good, short-n-sweet intro [here](http://ecommercedeveloper.com/articles/2999-make-basic-soap-calls-to-the-magento-core-api/).
-
+These are the Web Services User / API Key you created in Magento. If you don't know what this means, you'll have to get these from your Magento admin, or learn yourself.
 ### Run It
 
 ```mono ListOrders.exe apiUser apiKey```
